@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Code Editor | Project Name</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="vscode-layout">
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <h2>Files</h2>
+            <ul class="file-list">
+                <li class="active">main.py</li>
+            </ul>
+        </div>
+        <div class="vertical-resizer" id="sidebar-resizer"></div>
+
+        <!-- Main Editor Area -->
+        <div class="main-panel">
+            <div class="editor-header">
+                <span>main.py</span>
+                <button class="run-btn">▶ Run</button>
+            </div>
+
+            <!-- Code Editor -->
+            <div id="editor-wrapper">
+                <textarea id="code"></textarea>
+            </div>
+
+            <!-- Resizer between editor and terminal -->
+            <div class="horizontal-resizer" id="terminal-resizer"></div>
+
+            <!-- Output Tabs -->
+            <div class="output-tabs">
+                <button id="terminal-tab" class="tab-button active">Terminal</button>
+                <button id="shell-tab" class="tab-button">Shell</button>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="output-container" id="terminal">
+                <pre id="output">> Output will appear here...</pre>
+            </div>
+
+            <!-- Shell Interface -->
+            <div class="output-container hidden" id="shell">
+                <div id="shell-output"><span class="terminal-line">Welcome to the shell</span></div>
+                <div class="terminal-line">
+                    <span class="terminal-prompt">$</span>
+                    <span class="terminal-input" contenteditable="true" spellcheck="false"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+    <script type="module" src="/js/main.js"></script>
+</body>
+</html>
