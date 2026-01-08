@@ -1,69 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Code Editor | Project Name</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css" />
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
+import { outputEl, currentURL, promptInputs } from './terminal.js';
 
-    <div class="vscode-layout">
-        
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <h2>Files</h2>
-            <ul class="file-list">
-                <li class="active">main.py</li>
-            </ul>
-        </div>
-        <div class="vertical-resizer" id="sidebar-resizer"></div>
+/**
+ * Wrap raw user Java code into a valid Main class
+ */
+function wrapJavaCode(userCode) {
+    return `
+import java.util.*;
 
-        <!-- Main Editor Area -->
-        <div class="main-panel">
-            <div class="editor-header">
-                <span>main.py</span>
-                <button class="run-btn">▶ Run</button>
-            </div>
+public class Main {
+    public static void main(String[] args) {
+${userCode.split('\n').map(line => '        ' + line).join('\n')}
+    }
+}
+`;
+}
 
-            <!-- Code Editor -->
-            <div id="editor-wrapper">
-                <textarea id="code"></textarea>
-            </div>
+/**
+ * Execute Java code using the Piston API
+ */
+async function executeCode(code, inputs = []) {
+    outputEl.textContent = "🔄 " + currentURL + "/Main.java";
 
-            <!-- Resizer between editor and terminal -->
-            <div class="horizontal-resizer" id="terminal-resizer"></div>
+    try {
+        const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                language: "java",
+                version: "17",
+                files: [
+                    {
+                        name: "Main.java",
+                        content: code
+                    }
+                ],
+                stdin: inputs.join("\n")
+            })
+        });
 
-            <!-- Output Tabs -->
-            <div class="output-tabs">
-                <button id="terminal-tab" class="tab-button active">Terminal</button>
-                <button id="shell-tab" class="tab-button">Shell</button>
-            </div>
+        if (!response.ok) {
+            throw new Error("Error executing Java code");
+        }
 
-            <!-- Terminal Output -->
-            <div class="output-container" id="terminal">
-                <pre id="output">> Output will appear here...</pre>
-            </div>
+        const result = await response.json();
+        const output = result.run.output?.trim() || "⚠ No output";
 
-            <!-- Shell Interface -->
-            <div class="output-container hidden" id="shell">
-                <div id="shell-output"><span class="terminal-line">Welcome to the shell</span></div>
-                <div class="terminal-line">
-                    <span class="terminal-prompt">$</span>
-                    <span class="terminal-input" contenteditable="true" spellcheck="false"></span>
-                </div>
-            </div>
-        </div>
-    </div>
+        outputEl.innerHTML += `<br>> ${output.replace(/\n/g, "<br>")}`;
+    } catch (error) {
+        outputEl.innerHTML += `<br>⚠ ${error.message}`;
+    }
+}
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
-    <script type="module" src="./js/main.js"></script>
-</body>
-</html>
+/**
+ * Compile / run Java code from editor
+ */
+async function compileCode(editor) {
+    outputEl.innerHTML = "";
+
+    const rawCode = editor.getValue();
+
+    // Detect Scanner input usage
+    const inputPattern = /(Scanner\s+\w+\s*=\s*new\s+Scanner|next(Line|Int|Double)\s*\()/g;
+    const needsInput = inputPattern.test(rawCode);
+
+    let wrappedCode = wrapJavaCode(rawCode);
+
+    if (!needsInput) {
+        await executeCode(wrappedCode);
+        return;
+    }
+
+    // Prompt user for input values
+    promptInputs(
+        ["Program input (each line = one Scanner read)"],
+        (inputs) => executeCode(wrappedCode, inputs),
+        outputEl,
+        wrappedCode
+    );
+}
+
+export { compileCode, executeCode };
